@@ -20,7 +20,10 @@ const task_model_1 = __importDefault(require("./models/task.model"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const port = process.env.PORT || 3000;
-mongoose_1.default.connect(process.env.MONGO_URI);
+const environment = process.env.NODE_ENV || "dev";
+mongoose_1.default.connect(environment === "dev"
+    ? process.env.MONGO_URI_DEV
+    : process.env.MONGO_URI_STAGING);
 app.use(express_1.default.json());
 // Get all tasks
 app.get("/tasks", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -32,11 +35,26 @@ app.get("/tasks", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res.status(500).json({ error: "Internal Server Error" });
     }
 }));
+// Get task by id
+app.get("/tasks/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id } = req.params;
+        const task = yield task_model_1.default.findById(id);
+        if (task) {
+            res.json(task);
+        }
+        res.status(404);
+    }
+    catch (error) {
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+}));
 // Create a task
 app.post("/tasks", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { title } = req.body;
-        const task = new task_model_1.default({ title });
+        const { title, description } = req.body;
+        const task = new task_model_1.default({ title, description });
+        task.createdDate = new Date();
         yield task.save();
         res.json(task);
     }
@@ -48,8 +66,13 @@ app.post("/tasks", (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 app.patch("/tasks/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        const { completed } = req.body;
-        const task = yield task_model_1.default.findByIdAndUpdate(id, { completed }, { new: true });
+        const { title, description, completedDate, completed } = req.body;
+        const task = yield task_model_1.default.findByIdAndUpdate(id, {
+            title,
+            description,
+            completedDate: completed ? new Date() : null,
+            completed,
+        }, { new: true });
         res.json(task);
     }
     catch (error) {
