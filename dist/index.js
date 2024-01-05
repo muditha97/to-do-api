@@ -24,6 +24,8 @@ const environment = process.env.NODE_ENV || "dev";
 mongoose_1.default.connect(environment === "dev"
     ? process.env.MONGO_URI_DEV
     : process.env.MONGO_URI_STAGING);
+const cors = require("cors");
+app.use(cors());
 app.use(express_1.default.json());
 // Get all tasks
 app.get("/tasks", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
