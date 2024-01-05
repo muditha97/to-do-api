@@ -17,6 +17,9 @@ mongoose.connect(
     : process.env.MONGO_URI_STAGING!
 );
 
+const cors = require("cors");
+app.use(cors());
+
 app.use(express.json());
 
 // Get all tasks
